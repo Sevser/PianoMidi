@@ -89,6 +89,10 @@ const midiNumbers = [
   {"midiId":21,"pianoKey":"1","NoteName":"A0","freq":27.5}
 ];
 
+export const notes = midiNumbers.map(midi => ({
+  ...midi,
+}));
+
 export default {
   getNoteByMIDINumber(midiNumber) {
     return midiNumbers.find(midi => midi.midiId === midiNumber);

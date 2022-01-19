@@ -1,22 +1,29 @@
 <template>
-  <div>
-    <div
-        :key="index"
-        v-for="(log, index) in logs.slice(-50)">
-      {{log}}
-    </div>
+  <div class="app container">
+    <Piano />
   </div>
 </template>
 
 <script>
 import notes from './config/notes';
-import messageType from './config/messageType';
+// import messageType from './config/messageType';
+import Piano from './components/Piano';
+import { computed } from 'vue';
 
 export default {
+  provide() {
+    return {
+      activeButtons: computed(() => this.activeButtons),
+    }
+  },
   name: 'App',
+  components: {
+    Piano,
+  },
   data: () => ({
     logs: [],
     midi: null,
+    activeButtons: new Set(),
   }),
   methods: {
     onMIDISuccess( midiAccess ) {
@@ -43,11 +50,16 @@ export default {
       }
     },
     onMIDIMessage( event ) {
-      var str = "MIDI message received at timestamp " + event.timestamp + "[" + event.data.length + " bytes]: ";
-      str += "type " + messageType.getTypeByCode(event.data[0]).description + " ";
-      str += notes.getNoteByMIDINumber(event.data[1]).NoteName + " ";
-      str += "volume " + event.data[2].toString(10) + " of 100 ";
-      this.logs.push(str);
+      if (event.data[0] === 128) {
+        this.activeButtons.delete(notes.getNoteByMIDINumber(event.data[1]).NoteName);
+      } else if (event.data[0] === 144) {
+        this.activeButtons.add(notes.getNoteByMIDINumber(event.data[1]).NoteName);
+      }
+      // var str = "MIDI message received at timestamp " + event.timestamp + "[" + event.data.length + " bytes]: ";
+      // str += "type " + messageType.getTypeByCode(event.data[0]).description + " ";
+      // str += notes.getNoteByMIDINumber(event.data[1]).NoteName + " ";
+      // str += "volume " + event.data[2].toString(10) + " of 100 ";
+      // this.logs.push(str);
     },
     startLoggingMIDIInput( midiAccess ) {
       midiAccess.inputs.forEach( entry => {
@@ -64,11 +76,16 @@ export default {
 </script>
 
 <style>
-html, body, div#app {
+html, body, div#app, .container.app {
   height: 100%;
   width: 100%;
   padding: 0;
   margin: 0;
   position: relative;
+}
+</style>
+<style scoped>
+.container.app {
+  display: flex;
 }
 </style>
