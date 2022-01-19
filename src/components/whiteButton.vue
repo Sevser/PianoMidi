@@ -1,6 +1,8 @@
 <template>
   <div
-    :class="{ active }"
+    @mousedown.stop.prevent="clickButton"
+    @mouseup.stop.prevent="pressed = false"
+    :class="{ active, pressed }"
     class="white-button-container">
     <black-button
       v-if="hasNoteDies"
@@ -43,9 +45,18 @@ export default {
       return this.activeButtons.value.has(this.button.NoteName);
     },
   },
-  methods: {},
+  methods: {
+    clickButton() {
+      this.pressed = true;
+      EventBus.$emit('press:button', {
+        ...this.topCenterPosition,
+        power: 100,
+      });
+    }
+  },
   data() {
     return {
+      pressed: false,
       topCenterPosition: { top: null, left: null, width: null, center: null },
     };
   },
@@ -68,6 +79,9 @@ export default {
   background: white;
 }
 .white-button-container.active {
+  background: lime;
+}
+.white-button-container.pressed {
   background: lime;
 }
 
