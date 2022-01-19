@@ -7,10 +7,22 @@
 
 <script>
 
+import EventBus from '../utills/EventBus';
+
 export default {
   inject: ['activeButtons'],
   name: 'blackButton',
   components: {},
+  watch: {
+    active(nVal) {
+      if (nVal) {
+        EventBus.$emit('press:button', {
+          ...this.topCenterPosition,
+          power: this.activeButtons.value.get(this.button.NoteName),
+        });
+      }
+    },
+  },
   props: {
     button: {
       type: Object,
@@ -24,8 +36,16 @@ export default {
   },
   methods: {},
   data() {
-    return {};
+    return {
+      topCenterPosition: { top: null, left: null, width: null, center: null },
+    };
   },
+  mounted() {
+    this.topCenterPosition.top = this.$el.getBoundingClientRect().top;
+    this.topCenterPosition.width = this.$el.getBoundingClientRect().width;
+    this.topCenterPosition.left = this.$el.getBoundingClientRect().left;
+    this.topCenterPosition.center = this.topCenterPosition.left + this.topCenterPosition.width / 2;
+  }
 };
 </script>
 

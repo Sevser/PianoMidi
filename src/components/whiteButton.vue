@@ -10,17 +10,30 @@
 </template>
 
 <script>
-
+import EventBus from '../utills/EventBus';
 import BlackButton from './blackButton';
+
 export default {
   inject: ['activeButtons'],
   name: 'whiteButton',
-  components: {BlackButton},
+  components: {
+    BlackButton,
+  },
   props: {
     button: {
       type: Object,
       required: true,
     }
+  },
+  watch: {
+    active(nVal) {
+      if (nVal) {
+        EventBus.$emit('press:button', {
+          ...this.topCenterPosition,
+          power: this.activeButtons.value.get(this.button.NoteName),
+        });
+      }
+    },
   },
   computed: {
     hasNoteDies() {
@@ -32,8 +45,16 @@ export default {
   },
   methods: {},
   data() {
-    return {};
+    return {
+      topCenterPosition: { top: null, left: null, width: null, center: null },
+    };
   },
+  mounted() {
+    this.topCenterPosition.top = this.$el.getBoundingClientRect().top;
+    this.topCenterPosition.width = this.$el.getBoundingClientRect().width;
+    this.topCenterPosition.left = this.$el.getBoundingClientRect().left;
+    this.topCenterPosition.center = this.topCenterPosition.left + this.topCenterPosition.width / 2;
+  }
 };
 </script>
 

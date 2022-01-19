@@ -13,7 +13,9 @@ import WhiteButton from './whiteButton';
 
 export default {
   name: 'Piano',
-  components: {WhiteButton},
+  components: {
+    WhiteButton,
+  },
   props: {},
   computed: {
   },

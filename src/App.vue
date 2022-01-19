@@ -1,5 +1,6 @@
 <template>
   <div class="app container">
+    <canvas-backdrop />
     <Piano />
   </div>
 </template>
@@ -9,21 +10,26 @@ import notes from './config/notes';
 // import messageType from './config/messageType';
 import Piano from './components/Piano';
 import { computed } from 'vue';
+import CanvasBackdrop from './components/canvasBackdrop';
 
 export default {
   provide() {
     return {
       activeButtons: computed(() => this.activeButtons),
+      lastReleasedButton: computed(() => this.lastReleasedButton),
     }
   },
   name: 'App',
   components: {
+    CanvasBackdrop,
     Piano,
   },
   data: () => ({
     logs: [],
+    pressedButtons: [],
+    lastReleasedButton: null,
     midi: null,
-    activeButtons: new Set(),
+    activeButtons: new Map(),
   }),
   methods: {
     onMIDISuccess( midiAccess ) {
@@ -53,13 +59,9 @@ export default {
       if (event.data[0] === 128) {
         this.activeButtons.delete(notes.getNoteByMIDINumber(event.data[1]).NoteName);
       } else if (event.data[0] === 144) {
-        this.activeButtons.add(notes.getNoteByMIDINumber(event.data[1]).NoteName);
+        this.lastReleasedButton = notes.getNoteByMIDINumber(event.data[1]);
+        this.activeButtons.set(this.lastReleasedButton.NoteName, event.data[2]);
       }
-      // var str = "MIDI message received at timestamp " + event.timestamp + "[" + event.data.length + " bytes]: ";
-      // str += "type " + messageType.getTypeByCode(event.data[0]).description + " ";
-      // str += notes.getNoteByMIDINumber(event.data[1]).NoteName + " ";
-      // str += "volume " + event.data[2].toString(10) + " of 100 ";
-      // this.logs.push(str);
     },
     startLoggingMIDIInput( midiAccess ) {
       midiAccess.inputs.forEach( entry => {
@@ -82,6 +84,7 @@ html, body, div#app, .container.app {
   padding: 0;
   margin: 0;
   position: relative;
+  overflow: hidden;
 }
 </style>
 <style scoped>
