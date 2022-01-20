@@ -1,5 +1,9 @@
 <template>
-  <div class="app container">
+  <div
+    @mousedown="clicked = true"
+    @mouseup="clicked = false"
+    @mouseleave="clicked = false"
+    class="app container">
     <canvas-backdrop />
     <Piano />
   </div>
@@ -17,6 +21,7 @@ export default {
     return {
       activeButtons: computed(() => this.activeButtons),
       lastReleasedButton: computed(() => this.lastReleasedButton),
+      mouseClicked: computed(() => this.clicked),
     }
   },
   name: 'App',
@@ -29,6 +34,7 @@ export default {
     pressedButtons: [],
     lastReleasedButton: null,
     midi: null,
+    clicked: false,
     activeButtons: new Map(),
   }),
   methods: {
