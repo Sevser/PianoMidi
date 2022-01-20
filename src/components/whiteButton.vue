@@ -1,7 +1,9 @@
 <template>
   <div
     @mousedown.stop.prevent="clickButton"
+    @mouseenter.stop.prevent="clickButton"
     @mouseup.stop.prevent="pressed = false"
+    @mouseleave.stop.prevent="pressed = false"
     :class="{ active, pressed }"
     class="white-button-container">
     <black-button
