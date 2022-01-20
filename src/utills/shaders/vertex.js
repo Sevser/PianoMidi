@@ -1,11 +1,10 @@
 export default `
-// an attribute will receive data from a buffer
-attribute vec4 a_position;
- 
-// all shaders have a main function
-void main() {
+attribute vec2 coordinates;
+uniform mat3 u_matrix;
 
-  // gl_Position is a special variable a vertex shader
-  // is responsible for setting
-  gl_Position = a_position;
-}`;
+
+void main(void) {
+  vec2 position = (u_matrix * vec3(coordinates, 1)).xy;
+  gl_Position = vec4(position, 0, 1.0);
+}
+`;
