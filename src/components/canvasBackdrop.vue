@@ -4,7 +4,7 @@
 </template>
 
 <script>
-// import EventBus from '../utills/EventBus';
+import EventBus from '../utills/EventBus';
 import vertex from '../utills/shaders/vertex';
 import fragment from '../utills/shaders/fragment';
 
@@ -42,7 +42,6 @@ export default {
       this.gl.enable(this.gl.DEPTH_TEST);                               // включает использование буфера глубины
       this.gl.depthFunc(this.gl.LEQUAL);                                // определяет работу буфера глубины: более ближние объекты перекрывают дальние
       this.gl.clear(this.gl.COLOR_BUFFER_BIT|this.gl.DEPTH_BUFFER_BIT);      // очистить буфер цвета и буфер глубины.
-      // this.gl.viewport(0, 0, this.$refs.canvas.width, this.$refs.canvas.height);
 
 
       // setup a GLSL program
@@ -60,14 +59,15 @@ export default {
       // it (2 triangles)
       var positionBuffer = this.gl.createBuffer();
       this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-      // three 2d points
-      var positions = [
-        0, 0,
-        0, 0.5,
-        0.7, 0,
-      ];
-      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(positions), this.gl.STATIC_DRAW);
 
+      var positions = [];
+      for(let i = 0; i < this.drawLines.length; i++) {
+        positions.push(...this.drawLines[i].additionalPoints
+            .map((height, index) => [index / TOTAL_COLS * 2 - 1, this.drawLines[i].baseHeight / this.gl.canvas.height])
+            .flat());
+      }
+      console.log(positions)
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(positions), this.gl.STATIC_DRAW);
 
       this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
@@ -82,11 +82,11 @@ export default {
       var offset1 = 0;        // start at the beginning of the buffer
       this.gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset1);
 
-      // draw
-      var primitiveType = this.gl.TRIANGLES;
+      var primitiveType = this.gl.LINES;
       var offset2 = 0;
-      var count = 3;
-      this.gl.drawArrays(primitiveType, offset2, count);
+      for(let i = 0; i < this.drawLines.length; i++) {
+        this.gl.drawArrays(primitiveType, offset2 + TOTAL_COLS * 2* i, TOTAL_COLS * 2);
+      }
 
     },
     createFragmentShader(gl, fragment) {
@@ -178,15 +178,15 @@ export default {
     this.step = Math.floor(window.innerWidth / TOTAL_COLS);
     this.$refs.canvas.height = window.innerHeight;
     //this.ctx = this.$refs.canvas.getContext('2d');
-    // EventBus.$on('press:button', this.handlePressedButton.bind(this));
-    this.start();
+    EventBus.$on('press:button', this.handlePressedButton.bind(this));
     //this.intervalId = setInterval(this.draw.bind(this), 100);
-    // this.drawLines.fill(1);
-    // this.drawLines = this.drawLines.map((val, index) => ({
-    //   index,
-    //   baseHeight:  0 + ((window.innerHeight - (window.innerWidth / 100 * 13)) / 46) * (index + 1),
-    //   additionalPoints: (new Array(TOTAL_COLS)).fill(0),
-    // }));
+    this.drawLines.fill(1);
+    this.drawLines = this.drawLines.map((val, index) => ({
+      index,
+      baseHeight:  0 + ((window.innerHeight - (window.innerWidth / 100 * 13)) / 46) * (index + 1),
+      additionalPoints: (new Array(TOTAL_COLS)).fill(0),
+    }));
+    this.start();
   }
 };
 </script>
