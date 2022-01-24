@@ -1,8 +1,8 @@
 <template>
   <div
-    @mousedown.stop.prevent="clickButton"
-    @mouseup.stop.prevent="pressed = false"
-    :class="{ active, pressed }"
+    @mouseover.stop.prevent="checkEmitting"
+    @mouseleave="over = false"
+    :class="{ active, pressed: click && over }"
     class="white-button-container">
     <black-button
       v-if="hasNoteDies"
@@ -16,7 +16,7 @@ import EventBus from '../utills/EventBus';
 import BlackButton from './blackButton';
 
 export default {
-  inject: ['activeButtons'],
+  inject: ['activeButtons', 'mouseClicked'],
   name: 'whiteButton',
   components: {
     BlackButton,
@@ -44,19 +44,25 @@ export default {
     active() {
       return this.activeButtons.value.has(this.button.NoteName);
     },
+    click() {
+      return this.mouseClicked.value;
+    },
   },
   methods: {
-    clickButton() {
-      this.pressed = true;
-      EventBus.$emit('press:button', {
-        ...this.topCenterPosition,
-        power: 100,
-      });
-    }
+    checkEmitting() {
+      this.over = true;
+      if (this.click) {
+        EventBus.$emit('press:button', {
+          ...this.topCenterPosition,
+          power: 100,
+        });
+      }
+    },
   },
   data() {
     return {
       pressed: false,
+      over: false,
       topCenterPosition: { top: null, left: null, width: null, center: null },
     };
   },
@@ -77,6 +83,11 @@ export default {
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   background: white;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
 }
 .white-button-container.active {
   background: lime;

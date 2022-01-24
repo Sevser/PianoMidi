@@ -1,7 +1,15 @@
 <template>
-  <div class="app container">
+  <div
+    @mousedown="clicked = true"
+    @mouseup="clicked = false"
+    @mouseleave="clicked = false"
+    class="app container">
     <canvas-backdrop />
     <Piano />
+    <Settings
+      :model-value="selectedMidi"
+      @update:model-value="selectedMidi = $event"
+      :available-midi-devices="availableMidiDevices"/>
   </div>
 </template>
 
@@ -11,29 +19,39 @@ import notes from './config/notes';
 import Piano from './components/Piano';
 import { computed } from 'vue';
 import CanvasBackdrop from './components/canvasBackdrop';
+import Settings from './components/settings';
 
 export default {
   provide() {
     return {
       activeButtons: computed(() => this.activeButtons),
       lastReleasedButton: computed(() => this.lastReleasedButton),
+      mouseClicked: computed(() => this.clicked),
     }
   },
   name: 'App',
   components: {
+    Settings,
     CanvasBackdrop,
     Piano,
+  },
+  watch: {
+    selectedMidi(newVal) {
+      this.startLoggingMIDIInput(this.midi, newVal);
+    },
   },
   data: () => ({
     logs: [],
     pressedButtons: [],
     lastReleasedButton: null,
     midi: null,
+    clicked: false,
     activeButtons: new Map(),
+    availableMidiDevices: [],
+    selectedMidi: null,
   }),
   methods: {
     onMIDISuccess( midiAccess ) {
-      console.log( "MIDI ready!" );
       this.midi = midiAccess;  // store in the global (in real usage, would probably keep in an object instance)
       this.listInputsAndOutputs(this.midi);
       this.startLoggingMIDIInput(this.midi);
@@ -42,18 +60,10 @@ export default {
       console.log( "Failed to get MIDI access - " + msg );
     },
     listInputsAndOutputs( midiAccess ) {
-      for (let entry of midiAccess.inputs) {
-        var input = entry[1];
-        console.log("Input port [type:'" + input.type + "'] id:'" + input.id +
-            "' manufacturer:'" + input.manufacturer + "' name:'" + input.name +
-            "' version:'" + input.version + "'");
-      }
-      for (let entry of midiAccess.outputs) {
-        var output = entry[1];
-        console.log( "Output port [type:'" + output.type + "'] id:'" + output.id +
-            "' manufacturer:'" + output.manufacturer + "' name:'" + output.name +
-            "' version:'" + output.version + "'" );
-      }
+      this.availableMidiDevices = Array.from(midiAccess.inputs.values()).map(midi => ({
+        midi,
+        name: "' manufacturer:'" + midi.manufacturer + "' name:'" + midi.name + "' version:'" + midi.version + "'",
+      }));
     },
     onMIDIMessage( event ) {
       if (event.data[0] === 128) {
@@ -63,10 +73,13 @@ export default {
         this.activeButtons.set(this.lastReleasedButton.NoteName, event.data[2]);
       }
     },
-    startLoggingMIDIInput( midiAccess ) {
+    startLoggingMIDIInput( midiAccess, index) {
       midiAccess.inputs.forEach( entry => {
-        entry.onmidimessage = this.onMIDIMessage;
+        entry.onmidimessage = null;
       });
+      if (midiAccess.inputs.get(index) !== undefined) {
+        midiAccess.inputs.get(index).onmidimessage = this.onMIDIMessage;
+      }
     }
   },
   mounted() {
